@@ -1,0 +1,57 @@
+cases:
+  - name: 用户下单支付与物流查询
+    description: 验证变量替换、Token 自动传递、JSONPath 提取和多接口链式调用
+    tags: [framework, mock, flow]
+    variables:
+      username: demo
+      password: "123456"
+      product_id: 1001
+      quantity: 2
+    steps:
+      - name: 用户登录并提取 Token
+        request:
+          method: POST
+          path: /api/users/login
+          json:
+            username: ${username}
+            password: ${password}
+        extract:
+          token: $.data.token
+          tokenHead: $.data.tokenHead
+        assertions:
+          - {actual: status_code, comparator: eq, expected: 200}
+          - {actual: $.code, comparator: eq, expected: 200}
+          - {actual: $.data.token, comparator: exists}
+
+      - name: 创建订单并提取订单号
+        request:
+          method: POST
+          path: /api/orders
+          json:
+            productId: ${product_id}
+            quantity: ${quantity}
+        extract:
+          order_id: $.data.id
+        assertions:
+          - {actual: status_code, comparator: eq, expected: 200}
+          - {actual: $.data.status, comparator: eq, expected: UNPAID}
+          - {actual: $.data.quantity, comparator: eq, expected: 2}
+
+      - name: 支付订单
+        request:
+          method: POST
+          path: /api/orders/${order_id}/pay
+        assertions:
+          - {actual: $.data.id, comparator: rv, expected: "${order_id}"}
+          - {actual: $.data.status, comparator: eq, expected: PAID}
+
+      - name: 查询物流
+        request:
+          method: GET
+          path: /api/logistics/${order_id}
+        extract:
+          tracking_no: $.data.trackingNo
+        assertions:
+          - {actual: $.data.orderId, comparator: eq, expected: "${order_id}"}
+          - {actual: $.data.status, comparator: contains, expected: PICK}
+          - {actual: $.data.trackingNo, comparator: regex, expected: "^MOCK[0-9]+$"}

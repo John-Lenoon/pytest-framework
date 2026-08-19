@@ -1,0 +1,35 @@
+cases:
+  - name: YAML会员登录成功
+    description: 使用运行环境账号登录并自动提取 token
+    tags: [login, smoke]
+    steps:
+      - name: 登录
+        request:
+          method: POST
+          path: /mall-portal/sso/login
+          params:
+            username: ${member_username}
+            password: ${member_password}
+        extract:
+          token: $.data.token
+          tokenHead: $.data.tokenHead
+        assertions:
+          - {actual: status_code, comparator: eq, expected: 200}
+          - {actual: $.code, comparator: eq, expected: 200}
+          - {actual: $.data.token, comparator: exists}
+
+  - name: YAML会员密码错误
+    description: 错误密码不得返回 token
+    tags: [login, validation]
+    steps:
+      - name: 使用错误密码登录
+        request:
+          method: POST
+          path: /mall-portal/sso/login
+          params:
+            username: ${member_username}
+            password: WrongPassword123
+        assertions:
+          - {actual: status_code, comparator: eq, expected: 200}
+          - {actual: $.code, comparator: ne, expected: 200}
+          - {actual: $.data.token, comparator: not_exists}

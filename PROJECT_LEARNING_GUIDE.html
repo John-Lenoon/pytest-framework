@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="mall-swarm pytest API 自动化测试框架从零学习与面试手册">
+  <title>pytest-framework 项目学习与面试手册</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f7;
+      --surface: #ffffff;
+      --surface-alt: #eef2f3;
+      --text: #20272b;
+      --muted: #66737a;
+      --border: #d6dde0;
+      --nav: #172126;
+      --nav-text: #e8edef;
+      --nav-muted: #9fadb3;
+      --accent: #087f78;
+      --accent-soft: #dff2ef;
+      --blue: #2468a2;
+      --blue-soft: #e4eef7;
+      --amber: #9b5b0a;
+      --amber-soft: #fff0d5;
+      --red: #ad3b3b;
+      --red-soft: #f9e5e5;
+      --green: #2e7445;
+      --green-soft: #e3f2e7;
+      --code: #182126;
+      --code-text: #e9f1f2;
+      --shadow: 0 2px 10px rgba(23, 33, 38, 0.07);
+      --radius: 6px;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #111619;
+      --surface: #192126;
+      --surface-alt: #222c31;
+      --text: #e6ecee;
+      --muted: #a8b4ba;
+      --border: #344147;
+      --nav: #0b1012;
+      --nav-text: #edf2f3;
+      --nav-muted: #9ba9af;
+      --accent: #46bdb2;
+      --accent-soft: #173c39;
+      --blue: #75aee0;
+      --blue-soft: #1d3448;
+      --amber: #e0a34b;
+      --amber-soft: #443318;
+      --red: #e07979;
+      --red-soft: #472626;
+      --green: #76bf8c;
+      --green-soft: #1d3d27;
+      --code: #0b1012;
+      --code-text: #e6edef;
+      --shadow: none;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      letter-spacing: 0;
+    }
+    button, input { font: inherit; letter-spacing: 0; }
+    button { cursor: pointer; }
+    a { color: var(--blue); }
+    code, pre { font-family: Consolas, "Cascadia Code", monospace; }
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 0.92em;
+    }
+    pre {
+      position: relative;
+      margin: 14px 0;
+      padding: 18px;
+      overflow: auto;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: var(--code-text);
+      line-height: 1.6;
+      white-space: pre;
+    }
+    pre code { padding: 0; background: transparent; color: inherit; }
+    h1, h2, h3, h4 { margin: 0; font-weight: 500; line-height: 1.35; letter-spacing: 0; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 23px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    h4 { margin-top: 18px; font-size: 16px; }
+    p { margin: 10px 0; }
+    ul, ol { padding-left: 22px; }
+    li + li { margin-top: 5px; }
+    .skip-link {
+      position: absolute;
+      left: 12px;
+      top: -60px;
+      z-index: 100;
+      padding: 8px 12px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .skip-link:focus { top: 12px; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 58px;
+      padding: 9px 24px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+    .brand strong { font-weight: 500; white-space: nowrap; }
+    .brand span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .tool-button, .copy-button, .pipeline-node, .quiz-submit, .reset-button {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      min-height: 34px;
+      padding: 5px 10px;
+    }
+    .tool-button:hover, .copy-button:hover, .pipeline-node:hover, .reset-button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    .sidebar {
+      position: sticky;
+      top: 58px;
+      height: calc(100vh - 58px);
+      overflow-y: auto;
+      padding: 22px 16px 28px;
+      background: var(--nav);
+      color: var(--nav-text);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: var(--nav-muted);
+      font-size: 12px;
+    }
+    .progress-track {
+      height: 7px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      background: #344249;
+      border-radius: 4px;
+    }
+    .progress-fill { width: 0; height: 100%; background: #4fc1b6; transition: width 180ms ease; }
+    .sidebar nav { display: grid; gap: 3px; }
+    .nav-link {
+      display: block;
+      padding: 7px 9px;
+      border-left: 3px solid transparent;
+      color: var(--nav-muted);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .nav-link:hover, .nav-link.active {
+      border-left-color: #4fc1b6;
+      background: #223036;
+      color: var(--nav-text);
+    }
+    .sidebar-footer { margin-top: 20px; border-top: 1px solid #344249; padding-top: 14px; }
+    .sidebar-footer button { width: 100%; background: transparent; color: var(--nav-muted); border-color: #43535b; }
+    main {
+      min-width: 0;
+      padding: 36px 48px 80px;
+    }
+    .mobile-toc { display: none; }
+    .intro {
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--border);
+    }
+    .eyebrow { margin-bottom: 8px; color: var(--accent); font-size: 13px; font-weight: 500; }
+    .lead { max-width: 880px; color: var(--muted); font-size: 16px; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .metric {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .metric-value { font-size: 24px; font-weight: 500; line-height: 1.2; }
+    .metric-label { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .chapter {
+      scroll-margin-top: 80px;
+      padding: 38px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .chapter-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .chapter-number { color: var(--accent); font-size: 13px; font-weight: 500; }
+    .complete-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .complete-control input { width: 17px; height: 17px; accent-color: var(--accent); }
+    .callout {
+      margin: 16px 0;
+      padding: 13px 15px;
+      border-left: 4px solid var(--blue);
+      background: var(--blue-soft);
+    }
+    .callout strong { font-weight: 500; }
+    .callout.warning { border-left-color: var(--amber); background: var(--amber-soft); }
+    .callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+    .callout.success { border-left-color: var(--green); background: var(--green-soft); }
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .panel {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .panel h3, .panel h4 { margin-top: 0; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+    th, td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--surface-alt); font-weight: 500; white-space: nowrap; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .file-tree {
+      margin: 0;
+      padding: 16px;
+      background: var(--code);
+      color: var(--code-text);
+      border-radius: var(--radius);
+      line-height: 1.75;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(100px, 1fr));
+      gap: 8px;
+      margin: 20px 0 12px;
+    }
+    .pipeline-node { min-height: 72px; text-align: left; }
+    .pipeline-node[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+    .pipeline-node span { display: block; color: var(--muted); font-size: 12px; }
+    .pipeline-detail {
+      min-height: 100px;
+      padding: 16px;
+      border-left: 4px solid var(--accent);
+      background: var(--surface);
+    }
+    .dependency-flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin: 18px 0;
+    }
+    .dependency-node {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      white-space: nowrap;
+    }
+    .dependency-arrow { color: var(--muted); }
+    .tabs { margin-top: 18px; }
+    .tab-list { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); }
+    .tab-button {
+      padding: 8px 11px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+    .tab-button[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--text); }
+    .tab-panel { padding-top: 14px; }
+    .tab-panel[hidden] { display: none; }
+    details {
+      margin: 10px 0;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+    }
+    summary { padding: 11px 0; cursor: pointer; font-weight: 500; }
+    details > div { padding: 0 0 14px; }
+    .code-shell { position: relative; }
+    .copy-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+      min-height: 29px;
+      padding: 3px 8px;
+      border-color: #4a5960;
+      background: #253138;
+      color: #e8eef0;
+      font-size: 12px;
+    }
+    .quiz-question {
+      margin: 18px 0;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .quiz-question fieldset { margin: 0; padding: 0; border: 0; }
+    .quiz-question legend { margin-bottom: 10px; font-weight: 500; }
+    .quiz-option { display: block; margin: 7px 0; }
+    .quiz-option input { margin-right: 7px; accent-color: var(--accent); }
+    .quiz-feedback { display: none; margin-top: 10px; padding: 9px 11px; border-left: 3px solid var(--border); }
+    .quiz-question.correct .quiz-feedback { display: block; border-color: var(--green); background: var(--green-soft); }
+    .quiz-question.incorrect .quiz-feedback { display: block; border-color: var(--red); background: var(--red-soft); }
+    .quiz-submit { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+    .quiz-score { margin-left: 12px; font-weight: 500; }
+    .interview-answer { color: var(--muted); }
+    .interview-answer strong { color: var(--text); }
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 24px;
+    }
+    .glossary-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .glossary-item dt { font-weight: 500; }
+    .glossary-item dd { margin: 3px 0 0; color: var(--muted); }
+    .search-box {
+      width: min(320px, 42vw);
+      height: 36px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+    }
+    .search-box:focus { outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); border-color: var(--accent); }
+    mark { background: var(--amber-soft); color: var(--text); }
+    .hidden-by-search { display: none; }
+    .search-summary { display: none; margin-top: 12px; color: var(--muted); }
+    .search-summary.visible { display: block; }
+    .print-only { display: none; }
+    footer { padding: 28px 0 0; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 1080px) {
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pipeline { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+      main { padding: 30px 32px 70px; }
+    }
+    @media (max-width: 760px) {
+      .topbar { align-items: flex-start; flex-wrap: wrap; padding: 10px 14px; }
+      .brand span { display: none; }
+      .top-actions { width: 100%; }
+      .search-box { width: 100%; flex: 1 1 180px; }
+      .layout { display: block; }
+      .sidebar { display: none; }
+      main { padding: 22px 16px 55px; }
+      .mobile-toc { display: block; margin-bottom: 20px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+      .mobile-toc nav { display: grid; padding: 0 0 12px; }
+      .mobile-toc a { padding: 5px 0; }
+      h1 { font-size: 26px; }
+      h2 { font-size: 21px; }
+      .chapter-head { display: block; }
+      .complete-control { margin-top: 12px; }
+      .two-col, .three-col, .glossary-grid { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: 1fr 1fr; }
+      .metric-grid { grid-template-columns: 1fr 1fr; }
+      th, td { padding: 8px; }
+    }
+    @media (max-width: 420px) {
+      .metric-grid, .pipeline { grid-template-columns: 1fr; }
+      .tool-button { padding: 5px 8px; }
+      .brand strong { white-space: normal; }
+    }
+    @media print {
+      body { background: #ffffff; color: #111111; font-size: 11pt; }
+      .topbar, .sidebar, .mobile-toc, .complete-control, .copy-button, .quiz-submit, .reset-button { display: none !important; }
+      .hidden-by-search { display: block !important; }
+      .layout { display: block; max-width: none; }
+      main { padding: 0; }
+      .chapter { break-inside: avoid; padding: 22px 0; }
+      .panel, .metric, .quiz-question { border-color: #bbbbbb; box-shadow: none; }
+      pre { white-space: pre-wrap; background: #eeeeee; color: #111111; }
+      .print-only { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar">
+    <div class="brand">
+      <strong>pytest-framework 学习手册</strong>
+      <span>从第一次运行到面试讲解</span>
+    </div>
+    <div class="top-actions">
+      <label for="global-search" class="sr-only">搜索手册</label>
+      <input id="global-search" class="search-box" type="search" placeholder="搜索：fixture、重试、YAML..." autocomplete="off">
+      <button id="theme-toggle" class="tool-button" type="button">深色</button>
+      <button id="print-guide" class="tool-button" type="button">打印</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="章节导航">
+      <div class="progress-label"><span>学习进度</span><span id="progress-text">0 / 13</span></div>
+      <div class="progress-track" role="progressbar" aria-label="学习进度" aria-valuemin="0" aria-valuemax="13" aria-valuenow="0">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <nav id="side-nav">
+        <a class="nav-link" href="#overview">00 先建立全局认识</a>
+        <a class="nav-link" href="#run">01 先把项目跑起来</a>
+        <a class="nav-link" href="#structure">02 目录与职责</a>
+        <a class="nav-link" href="#request-flow">03 一次请求如何执行</a>
+        <a class="nav-link" href="#pytest-core">04 pytest 核心知识</a>
+        <a class="nav-link" href="#fixtures">05 Fixture 与数据清理</a>
+        <a class="nav-link" href="#business">06 业务用例设计</a>
+        <a class="nav-link" href="#yaml-engine">07 YAML 场景引擎</a>
+        <a class="nav-link" href="#http-assert">08 HTTP、重试与断言</a>
+        <a class="nav-link" href="#database-report">09 数据库与报告</a>
+        <a class="nav-link" href="#ci">10 CI/CD 与并行</a>
+        <a class="nav-link" href="#debug">11 排错方法</a>
+        <a class="nav-link" href="#interview">12 面试表达</a>
+        <a class="nav-link" href="#quiz">13 自测题</a>
+        <a class="nav-link" href="#glossary">术语表与学习计划</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="reset-progress" class="reset-button" type="button">重置学习进度</button>
+      </div>
+    </aside>
+
+    <main id="main-content">
+      <details class="mobile-toc">
+        <summary>章节目录与学习进度</summary>
+        <nav>
+          <a href="#overview">全局认识</a><a href="#run">运行项目</a><a href="#structure">目录职责</a>
+          <a href="#request-flow">请求链路</a><a href="#pytest-core">pytest 核心</a><a href="#fixtures">Fixture</a>
+          <a href="#business">业务用例</a><a href="#yaml-engine">YAML 引擎</a><a href="#http-assert">HTTP 与断言</a>
+          <a href="#database-report">数据库与报告</a><a href="#ci">CI/CD</a><a href="#debug">排错</a>
+          <a href="#interview">面试表达</a><a href="#quiz">自测题</a>
+        </nav>
+      </details>
+      <p id="search-summary" class="search-summary" aria-live="polite"></p>
+
+      <section id="overview" class="intro searchable" data-title="全局认识">
+        <div class="eyebrow">从小白到能讲清架构</div>
+        <h1>mall-swarm API 自动化测试框架</h1>
+        <p class="lead">这不是 mall 商城本身，而是一套专门验证 mall-swarm 后端接口的测试工程。你要掌握的核心不是背代码，而是理解：测试如何准备数据、如何发请求、如何断言、如何清理，以及失败后如何定位。</p>
+        <div class="metric-grid" aria-label="项目实测指标">
+          <div class="metric"><div class="metric-value">131</div><div class="metric-label">真实 API 业务用例</div></div>
+          <div class="metric"><div class="metric-value">32</div><div class="metric-label">去重网关路由</div></div>
+          <div class="metric"><div class="metric-value">79.17%</div><div class="metric-label">框架核心覆盖率</div></div>
+          <div class="metric"><div class="metric-value">0 failed</div><div class="metric-label">两次完整实测</div></div>
+        </div>
+        <div class="callout warning"><strong>先记住一个边界：</strong>业务测试在 <code>tests/</code>，会访问真实 API；<code>framework_tests/</code> 使用 Flask Mock Server，只测试框架自身。面试时不要说整个项目都是 Mock，也不要说框架自测覆盖率就是被测系统覆盖率。</div>
+      </section>
+
+      <section id="run" class="chapter searchable" data-chapter="run" data-title="运行项目">
+        <div class="chapter-head"><div><div class="chapter-number">01</div><h2>先把项目跑起来</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="run">我已掌握</label></div>
+        <p>学习任何测试框架的第一步都是建立“输入、执行、输出”的直觉。本项目的输入是 Python/YAML 测试，用 pytest 执行，输出终端结果、HTML、JUnit 和 Allure 数据。</p>
+        <div class="two-col">
+          <div class="panel">
+            <h3>最小运行路径</h3>
+            <ol>
+              <li>确认 mall 网关和后端依赖已启动。</li>
+              <li>安装 <code>requirements.txt</code>。</li>
+              <li>先执行 smoke，再执行全量。</li>
+              <li>打开根目录下的 <code>reports/report.html</code>。</li>
+            </ol>
+          </div>
+          <div class="panel">
+            <h3>环境依赖</h3>
+            <ul>
+              <li>网关：<code>localhost:8201</code></li>
+              <li>业务服务：auth / portal / search / admin</li>
+              <li>中间件：Nacos、Redis、RabbitMQ、MySQL</li>
+              <li>ES 用例额外依赖 Elasticsearch 和 pms 索引</li>
+            </ul>
+          </div>
+        </div>
+        <h3>常用命令</h3>
+        <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code># 安装依赖
+python -m pip install -r requirements.txt
+
+# 11 条核心冒烟用例
+python -m pytest -m smoke
+
+# 131 条业务用例，默认生成 reports/report.html
+python -m pytest tests
+
+# 指定模块
+python -m pytest -m "login or cart"
+
+# 双进程执行
+python -m pytest tests -n 2
+
+# 只收集、不执行，用于检查用例规模
+python -m pytest tests --collect-only -q -o addopts=""</code></pre></div>
+        <div class="callout"><strong>为什么推荐 <code>python -m pytest</code>？</strong>它明确使用当前 Python 解释器里的 pytest，能减少电脑上多个 Python/虚拟环境造成的“装了依赖却导入失败”。</div>
+        <h3>怎么看结果</h3>
+        <div class="table-wrap"><table><thead><tr><th>状态</th><th>含义</th><th>下一步</th></tr></thead><tbody>
+          <tr><td>passed</td><td>测试逻辑执行且所有断言成立</td><td>检查是否符合预期覆盖，不代表接口绝对无缺陷</td></tr>
+          <tr><td>failed</td><td>测试主体断言失败</td><td>查看响应、断言行与 Allure 附件</td></tr>
+          <tr><td>error</td><td>fixture 准备/清理或框架执行异常</td><td>优先看 setup/teardown 堆栈</td></tr>
+          <tr><td>skipped</td><td>条件不满足而主动跳过</td><td>本项目常见原因是数据库校验未启用</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="structure" class="chapter searchable" data-chapter="structure" data-title="目录职责">
+        <div class="chapter-head"><div><div class="chapter-number">02</div><h2>目录结构：先知道去哪里找</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="structure">我已掌握</label></div>
+        <div class="two-col">
+          <pre class="file-tree" aria-label="项目目录树">pytest-framework/
+├─ config/           全局配置与 Pydantic 模型
+├─ data/             Python 参数化数据
+├─ fixtures/         业务前置、复用和清理
+├─ tests/            真实 API 测试
+├─ engine/           YAML 场景执行器
+├─ cases/            真实 API YAML 场景
+├─ utils/            HTTP、断言、DB、报告工具
+├─ framework_tests/  框架离线自测
+├─ mock_server/      仅供框架自测的 Flask 服务
+├─ scripts/          CLI、Linux CI、钉钉通知
+├─ pytest.ini        pytest 默认配置与 marker
+├─ conftest.py       全局 fixture 插件注册
+├─ Jenkinsfile       Jenkins Linux 流水线
+└─ requirements.txt  Python 依赖</pre>
+          <div>
+            <h3>阅读顺序</h3>
+            <ol>
+              <li><code>pytest.ini</code>：入口规则。</li>
+              <li><code>conftest.py</code>：fixture 从哪里注册。</li>
+              <li><code>tests/test_login.py</code>：最容易理解的业务测试。</li>
+              <li><code>fixtures/session_fixtures.py</code>：配置与登录客户端。</li>
+              <li><code>utils/http_client.py</code>：请求究竟怎样发出去。</li>
+              <li><code>utils/assertions.py</code>：成功与失败如何判定。</li>
+              <li>再进入购物车、订单和 YAML 引擎。</li>
+            </ol>
+            <div class="callout success"><strong>判断代码放哪里：</strong>接口输入组合放 <code>data/</code>，可复用前置放 <code>fixtures/</code>，业务断言放 <code>tests/</code>，跨业务通用能力放 <code>utils/</code> 或 <code>engine/</code>。</div>
+          </div>
+        </div>
+        <h3>为什么不是 POM</h3>
+        <p>POM（Page Object Model）用于 UI 自动化，把页面元素和页面操作封装成对象。本项目没有浏览器页面元素，使用的是“业务域 fixture 分层 + HTTP 客户端 + 场景引擎”。面试时写 POM 会暴露概念混淆。</p>
+      </section>
+
+      <section id="request-flow" class="chapter searchable" data-chapter="request-flow" data-title="请求执行链路">
+        <div class="chapter-head"><div><div class="chapter-number">03</div><h2>一次测试请求到底经历了什么</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="request-flow">我已掌握</label></div>
+        <p>点击下面任一步骤，查看它在项目中的职责。先掌握这条链路，再看具体文件就不会迷路。</p>
+        <div class="pipeline" role="group" aria-label="请求执行流水线">
+          <button class="pipeline-node" type="button" data-step="0" aria-pressed="true">1. 收集用例<span>pytest + marker</span></button>
+          <button class="pipeline-node" type="button" data-step="1" aria-pressed="false">2. 解析依赖<span>fixture graph</span></button>
+          <button class="pipeline-node" type="button" data-step="2" aria-pressed="false">3. 构造请求<span>settings + data</span></button>
+          <button class="pipeline-node" type="button" data-step="3" aria-pressed="false">4. 访问网关<span>requests Session</span></button>
+          <button class="pipeline-node" type="button" data-step="4" aria-pressed="false">5. 执行断言<span>HTTP + JSON</span></button>
+          <button class="pipeline-node" type="button" data-step="5" aria-pressed="false">6. 清理与报告<span>yield teardown</span></button>
+        </div>
+        <div id="pipeline-detail" class="pipeline-detail" aria-live="polite"></div>
+        <h3>用登录成功测试举例</h3>
+        <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code>def test_member_login_success(settings, anon_client):
+    response = anon_client.post(
+        settings.portal("/sso/login"),
+        params={"username": "test", "password": "123456"},
+    )
+    payload = assert_success(response)
+    assert payload["data"]["token"]</code></pre></div>
+        <ol>
+          <li>pytest 发现函数名以 <code>test_</code> 开头。</li>
+          <li>看到参数 <code>settings</code>、<code>anon_client</code>，从注册的 fixture 中寻找同名对象。</li>
+          <li><code>settings.portal</code> 生成 <code>/mall-portal/sso/login</code>。</li>
+          <li><code>ApiClient</code> 将其拼到 <code>http://localhost:8201</code> 后发送。</li>
+          <li><code>assert_success</code> 同时检查 HTTP、JSON 结构和业务 code。</li>
+          <li>请求/响应进入 Allure；Session 在测试会话结束时关闭。</li>
+        </ol>
+      </section>
+
+      <section id="pytest-core" class="chapter searchable" data-chapter="pytest-core" data-title="pytest 核心">
+        <div class="chapter-head"><div><div class="chapter-number">04</div><h2>你必须掌握的 pytest 核心概念</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="pytest-core">我已掌握</label></div>
+        <div class="tabs" data-tabs>
+          <div class="tab-list" role="tablist">
+            <button class="tab-button" role="tab" aria-selected="true" data-tab="discover">发现规则</button>
+            <button class="tab-button" role="tab" aria-selected="false" data-tab="parametrize">参数化</button>
+            <button class="tab-button" role="tab" aria-selected="false" data-tab="marker">Marker</button>
+            <button class="tab-button" role="tab" aria-selected="false" data-tab="fixture-basic">Fixture</button>
+          </div>
+          <div class="tab-panel" role="tabpanel" data-panel="discover">
+            <p>pytest 默认发现 <code>test_*.py</code> / <code>*_test.py</code> 文件、<code>Test*</code> 类和 <code>test_*</code> 函数。本项目用 <code>pytest.ini</code> 将默认测试目录设为 <code>tests</code>。</p>
+          </div>
+          <div class="tab-panel" role="tabpanel" data-panel="parametrize" hidden>
+            <p>一个测试函数配多组输入，收集时展开成多个 node。本项目有 29 处参数化定义，这就是 66 个函数能够展开为 131 条业务用例的重要原因。</p>
+            <pre><code>@pytest.mark.parametrize("quantity", [1, 2, 5])
+def test_cart_update_quantity(quantity):
+    ...</code></pre>
+          </div>
+          <div class="tab-panel" role="tabpanel" data-panel="marker" hidden>
+            <p>Marker 是用例标签。模块标签表示业务归属，场景标签表示测试维度。它们可以重叠，例如一条订单主链路既是 <code>order</code> 又是 <code>flow</code>。</p>
+            <pre><code>pytest -m smoke
+pytest -m "order and flow"
+pytest -m "validation and not es"</code></pre>
+          </div>
+          <div class="tab-panel" role="tabpanel" data-panel="fixture-basic" hidden>
+            <p>fixture 是 pytest 的依赖注入机制。测试函数参数名就是依赖名，pytest 自动创建依赖、缓存 scope 对应的对象，并按相反顺序执行 teardown。</p>
+          </div>
+        </div>
+        <h3>Scope 怎么选</h3>
+        <div class="table-wrap"><table><thead><tr><th>Scope</th><th>生命周期</th><th>项目中的例子</th><th>选择原则</th></tr></thead><tbody>
+          <tr><td>session</td><td>整个测试会话一次</td><td>settings、member_client</td><td>创建昂贵且可安全共享</td></tr>
+          <tr><td>module</td><td>一个测试模块一次</td><td>es_available</td><td>同模块共享环境检查</td></tr>
+          <tr><td>function</td><td>每条用例一次</td><td>cart_item_id、generated_order</td><td>有状态、需要独立创建和清理</td></tr>
+        </tbody></table></div>
+        <div class="callout danger"><strong>常见误区：</strong>fixture 不是普通 helper。普通 helper 由你主动调用；fixture 由 pytest 根据依赖图调度，负责 scope、缓存和 teardown。</div>
+      </section>
+
+      <section id="fixtures" class="chapter searchable" data-chapter="fixtures" data-title="Fixture 与数据清理">
+        <div class="chapter-head"><div><div class="chapter-number">05</div><h2>Fixture：项目最值得讲的设计</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="fixtures">我已掌握</label></div>
+        <p>真实 API 测试最大的难点不是发请求，而是“前置数据从哪里来”和“执行后如何不污染环境”。本项目用 30 个 fixture 描述依赖图。</p>
+        <div class="dependency-flow" aria-label="订单 fixture 依赖链">
+          <span class="dependency-node">settings</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">member_client</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">worker_product</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">cart_item_id</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">confirm_order</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">generated_order</span><span class="dependency-arrow">→</span>
+          <span class="dependency-node">paid_order_id</span>
+        </div>
+        <h3><code>yield</code> fixture 为什么重要</h3>
+        <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code>@pytest.fixture
+def cart_item_id(settings, member_client, product_id, sku_id):
+    # setup：创建自己的购物车条目
+    item_id = create_and_find_item(...)
+
+    yield item_id
+
+    # teardown：无论测试通过还是失败，都尝试清理
+    delete_cart_item(settings, member_client, item_id)</code></pre></div>
+        <p><code>yield</code> 前是 setup，返回给测试的是 yield 后面的值；测试结束后，pytest 回到 yield 下一行执行 teardown。依赖越晚创建，越早清理。</p>
+        <h3>本项目的数据隔离策略</h3>
+        <div class="three-col">
+          <div class="panel"><h4>购物车</h4><p>写入前确认同款商品不存在；只按自己创建的 item id 删除，避免清空共享账号已有数据。</p></div>
+          <div class="panel"><h4>并行 worker</h4><p>根据 <code>gw0/gw1</code> 分配不同商品和 SKU，避免同款商品被后端自动合并造成串扰。</p></div>
+          <div class="panel"><h4>订单</h4><p>未支付订单执行取消再删除；已支付订单因后端状态规则无法删除，只记录并保留。</p></div>
+        </div>
+        <div class="callout warning"><strong>面试亮点：</strong>不要只说“用了 fixture”。要说你如何利用 fixture 的依赖图和 teardown 解决真实数据副作用，并说明为什么已支付订单不能承诺 100% 清理。</div>
+      </section>
+
+      <section id="business" class="chapter searchable" data-chapter="business" data-title="业务用例设计">
+        <div class="chapter-head"><div><div class="chapter-number">06</div><h2>业务用例如何从 66 个函数展开为 131 条</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="business">我已掌握</label></div>
+        <div class="table-wrap"><table><thead><tr><th>模块</th><th class="num">用例数</th><th>覆盖重点</th></tr></thead><tbody>
+          <tr><td>搜索</td><td class="num">42</td><td>MySQL/ES、排序、分页、边界、关联、推荐</td></tr>
+          <tr><td>订单</td><td class="num">31</td><td>确认、创建、支付、重复支付、取消、列表、详情</td></tr>
+          <tr><td>购物车</td><td class="num">27</td><td>增删改查、促销、清空、非法参数、鉴权</td></tr>
+          <tr><td>登录</td><td class="num">20</td><td>会员、后台、统一认证、错误密码、Token</td></tr>
+          <tr><td>商品</td><td class="num">8</td><td>分类、首页、品牌、详情、非法 ID</td></tr>
+          <tr><td>YAML 真实场景</td><td class="num">3</td><td>登录成功/失败、API 与数据库一致性</td></tr>
+        </tbody></table></div>
+        <h3>一条好用例应该包含什么</h3>
+        <ol>
+          <li><strong>明确测试意图：</strong>名称和 docstring 说明验证什么，不只是接口名。</li>
+          <li><strong>受控前置：</strong>通过 fixture 准备 token、商品、购物车或订单。</li>
+          <li><strong>单一核心行为：</strong>本条测试关注一个主要风险。</li>
+          <li><strong>业务断言：</strong>不仅看 HTTP 200，还看 body code、结构、状态和数据变化。</li>
+          <li><strong>后置验证：</strong>更新后重新查询，确认服务端状态确实发生变化。</li>
+          <li><strong>清理策略：</strong>能删则删，不能删则明确记录边界。</li>
+        </ol>
+        <h3>测试维度</h3>
+        <div class="three-col">
+          <div class="panel"><h4>正常与主链路</h4><p><code>smoke=11</code>，<code>flow=10</code>。验证核心功能和跨接口状态流转。</p></div>
+          <div class="panel"><h4>异常与权限</h4><p><code>validation=31</code>，<code>permission=11</code>。覆盖缺参、错类型、非法 token。</p></div>
+          <div class="panel"><h4>边界与依赖</h4><p><code>boundary=13</code>，<code>es=15</code>，<code>database=1</code>。</p></div>
+        </div>
+        <div class="callout"><strong>契约意识：</strong>项目记录了 12 项规则预期与真实 API 行为差异。测试既要暴露 500、脏数据等缺陷，又不能为了“全绿”把危险行为当正常成功。</div>
+      </section>
+
+      <section id="yaml-engine" class="chapter searchable" data-chapter="yaml-engine" data-title="YAML 场景引擎">
+        <div class="chapter-head"><div><div class="chapter-number">07</div><h2>YAML 场景引擎：把流程从 Python 代码中抽出来</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="yaml-engine">我已掌握</label></div>
+        <p>简单接口用 Python 测试最清楚；多接口流程会反复出现“发请求、提取字段、传给下一步”。场景引擎把这些重复动作抽象成 YAML。</p>
+        <div class="two-col">
+          <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code>cases:
+  - name: 会员登录成功
+    steps:
+      - name: 登录并提取 token
+        request:
+          method: POST
+          path: /mall-portal/sso/login
+          params:
+            username: ${member_username}
+            password: ${member_password}
+        extract:
+          token: $.data.token
+        assertions:
+          - actual: $.code
+            comparator: eq
+            expected: 200</code></pre></div>
+          <div>
+            <h3>对应执行过程</h3>
+            <ol>
+              <li><code>load_yaml</code> 使用 safe_load 读取文件。</li>
+              <li><code>CaseFile.model_validate</code> 用 Pydantic 校验结构。</li>
+              <li><code>render</code> 将变量替换到请求中。</li>
+              <li><code>ScenarioRunner</code> 发送请求。</li>
+              <li><code>find_one</code> 用 JSONPath 提取 token。</li>
+              <li>Runner 自动把 token 设置到客户端。</li>
+              <li><code>AssertionEngine</code> 执行断言。</li>
+            </ol>
+          </div>
+        </div>
+        <h3>变量与动态值</h3>
+        <div class="table-wrap"><table><thead><tr><th>写法</th><th>作用</th><th>类型</th></tr></thead><tbody>
+          <tr><td><code>${order_id}</code></td><td>读取场景上下文变量</td><td>整字段替换时保留原类型</td></tr>
+          <tr><td><code>order-${order_id}</code></td><td>在字符串中插值</td><td>字符串</td></tr>
+          <tr><td><code>${ENV:NAME}</code></td><td>读取系统环境变量</td><td>字符串</td></tr>
+          <tr><td><code>${{uuid}}</code></td><td>生成无连字符 UUID</td><td>字符串</td></tr>
+          <tr><td><code>${{timestamp}}</code></td><td>当前秒级时间戳</td><td>整数</td></tr>
+          <tr><td><code>${{random_int:1,100}}</code></td><td>生成闭区间随机整数</td><td>整数</td></tr>
+        </tbody></table></div>
+        <details><summary>什么时候不要用 YAML？</summary><div><p>复杂循环、条件分支、特殊清理或大量自定义 Python 计算用 YAML 会变得难读。此时直接写 Python 测试更合适。数据驱动不是“所有测试都 YAML 化”，而是选择表达成本最低的形式。</p></div></details>
+      </section>
+
+      <section id="http-assert" class="chapter searchable" data-chapter="http-assert" data-title="HTTP 重试与断言">
+        <div class="chapter-head"><div><div class="chapter-number">08</div><h2>HTTP 客户端、重试与断言</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="http-assert">我已掌握</label></div>
+        <div class="two-col">
+          <div class="panel"><h3>ApiClient 做什么</h3><ul>
+            <li>复用 <code>requests.Session</code> 连接池。</li>
+            <li>统一 base URL、Accept 和 Authorization。</li>
+            <li>默认 15 秒超时，可由环境变量覆盖。</li>
+            <li>记录方法、URL、状态码和耗时。</li>
+            <li>把请求和响应附加到 Allure。</li>
+          </ul></div>
+          <div class="panel"><h3>ApiClient 不做什么</h3><ul>
+            <li>不把所有 4xx/5xx 自动判为异常。</li>
+            <li>不替业务测试决定 code 是否正确。</li>
+            <li>不盲目重试 POST 下单和支付。</li>
+            <li>不把连接失败静默吞掉。</li>
+          </ul></div>
+        </div>
+        <h3>为什么只重试幂等请求</h3>
+        <p>GET 读取超时后再读一次，通常不会产生额外业务数据；POST 可能已经在服务端成功，只是响应途中断开。如果客户端自动重试，可能重复下单、重复扣款。因此项目只对 GET、HEAD、OPTIONS 的连接错误和超时重试。</p>
+        <div class="callout danger"><strong>面试陷阱：</strong>“失败重试”不等于“所有失败都再跑一次”。HTTP 业务错误重试通常无意义，非幂等写请求重试还可能扩大事故。</div>
+        <h3>三层断言思路</h3>
+        <div class="three-col">
+          <div class="panel"><h4>传输层</h4><p>HTTP 状态码、响应是否为 JSON、Header。</p></div>
+          <div class="panel"><h4>协议层</h4><p>CommonResult 是否有 code/message/data，分页结构是否完整。</p></div>
+          <div class="panel"><h4>业务层</h4><p>订单状态、数量变化、列表包含关系、非法请求没有产生数据。</p></div>
+        </div>
+        <h3>场景引擎支持的比较器</h3>
+        <p><code>eq</code>、<code>rv</code>、<code>ne</code>、<code>contains</code>、<code>not_contains</code>、<code>in</code>、<code>not_in</code>、<code>gt</code>、<code>ge</code>、<code>lt</code>、<code>le</code>、<code>exists</code>、<code>not_exists</code>、<code>regex</code>、<code>length_eq</code>、<code>type</code>，以及数据库比较 <code>db</code>/<code>db_eq</code>。</p>
+      </section>
+
+      <section id="database-report" class="chapter searchable" data-chapter="database-report" data-title="数据库与报告">
+        <div class="chapter-head"><div><div class="chapter-number">09</div><h2>数据库双重校验与测试报告</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="database-report">我已掌握</label></div>
+        <h3>为什么接口通过还要查数据库</h3>
+        <p>接口返回成功只说明服务“声称成功”。关键链路还需要确认数据库最终状态。例如会员信息接口返回的 username 是否与 <code>ums_member</code> 对应记录一致。</p>
+        <div class="two-col">
+          <div>
+            <h3>SQLAlchemy 设计</h3>
+            <ul>
+              <li><code>mysql+pymysql</code> 驱动。</li>
+              <li><code>pool_pre_ping=True</code> 检查失效连接。</li>
+              <li><code>pool_recycle=1800</code> 回收长连接。</li>
+              <li><code>URL.create</code> 避免密码出现在字符串 URL。</li>
+              <li>只允许 SELECT/SHOW/DESCRIBE/EXPLAIN。</li>
+              <li>Session 结束统一 dispose Engine。</li>
+            </ul>
+          </div>
+          <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code>$env:PYTEST_DB_ENABLED = "true"
+$env:PYTEST_DB_HOST = "127.0.0.1"
+$env:PYTEST_DB_USER = "root"
+$env:PYTEST_DB_PASSWORD = "你的密码"
+$env:PYTEST_DB_NAME = "mall"
+
+python -m pytest tests/test_yaml_scenarios.py -m database</code></pre></div>
+        </div>
+        <div class="callout warning"><strong>当前证据边界：</strong>数据库适配层单测覆盖率 95%，但本机真实 DB 用例因未提供 root 密码而跳过/无法认证。简历可以说“实现能力”，不能说“数据库校验已在 CI 全量稳定运行”。</div>
+        <h3>三种报告各自解决什么问题</h3>
+        <div class="table-wrap"><table><thead><tr><th>报告</th><th>适用场景</th><th>特点</th></tr></thead><tbody>
+          <tr><td>pytest-html</td><td>本地快速查看、发送单文件</td><td>无需服务，直接打开 <code>reports/report.html</code></td></tr>
+          <tr><td>Allure</td><td>失败诊断和 CI 展示</td><td>步骤、请求/响应附件、环境信息</td></tr>
+          <tr><td>JUnit XML</td><td>Jenkins/GitHub Actions 机器读取</td><td>用例状态、耗时、趋势的标准输入</td></tr>
+        </tbody></table></div>
+        <p>Allure 工具会对 10 类敏感字段脱敏：Authorization、password、passwd、token、tokenHead、access token、refresh token、authCode、phoneNumber、telephone。响应附件超过 4000 字符会截断，避免报告膨胀。</p>
+      </section>
+
+      <section id="ci" class="chapter searchable" data-chapter="ci" data-title="CI/CD 与并行">
+        <div class="chapter-head"><div><div class="chapter-number">10</div><h2>CI/CD、Linux 与 xdist</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="ci">我已掌握</label></div>
+        <div class="two-col">
+          <div class="panel"><h3>Jenkinsfile</h3><ol>
+            <li>Linux agent checkout 并清理旧工作区。</li>
+            <li>创建 venv，安装 requirements。</li>
+            <li>始终执行 11 条框架自测。</li>
+            <li>按 <code>RUN_E2E</code> 决定是否执行真实 API。</li>
+            <li>支持 marker 和 worker 数参数。</li>
+            <li>发布 JUnit、Allure、HTML，按需钉钉通知。</li>
+          </ol></div>
+          <div class="panel"><h3>GitHub Actions</h3><ol>
+            <li>push/PR 自动执行离线框架自测。</li>
+            <li>workflow_dispatch 手动触发真实 E2E。</li>
+            <li>账号和地址从 Secrets 注入。</li>
+            <li>归档报告 artifact。</li>
+          </ol></div>
+        </div>
+        <h3>为什么并行只快了 1.4%</h3>
+        <div class="table-wrap"><table><thead><tr><th>模式</th><th class="num">Collected</th><th class="num">Passed</th><th class="num">Skipped</th><th class="num">耗时</th></tr></thead><tbody>
+          <tr><td>串行</td><td class="num">131</td><td class="num">130</td><td class="num">1</td><td class="num">8.818s</td></tr>
+          <tr><td>xdist -n 2</td><td class="num">131</td><td class="num">130</td><td class="num">1</td><td class="num">8.695s</td></tr>
+        </tbody></table></div>
+        <p>本地 API 延迟低，套件规模小，创建 worker、重建 session fixture 和进程调度产生固定成本，所以收益有限。并行能力的价值主要体现在更大用例集或远程高延迟环境；不能脱离测量宣称“2 小时降到 15 分钟”。</p>
+        <div class="callout"><strong>并行不是加一个 <code>-n auto</code> 就结束。</strong>必须确认共享账号、购物车合并、订单状态、随机数据和 teardown 都能在 worker 间隔离。</div>
+      </section>
+
+      <section id="debug" class="chapter searchable" data-chapter="debug" data-title="排错方法">
+        <div class="chapter-head"><div><div class="chapter-number">11</div><h2>失败时如何系统排查</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="debug">我已掌握</label></div>
+        <p>排错不要从“是不是代码有 bug”开始猜，而要先判断失败发生在哪一层。</p>
+        <div class="table-wrap"><table><thead><tr><th>现象</th><th>优先检查</th><th>典型原因</th></tr></thead><tbody>
+          <tr><td>ConnectionError / Timeout</td><td>网关探测、服务注册、中间件</td><td>服务未启动、端口错误、Nacos 未注册</td></tr>
+          <tr><td>HTTP 200 但断言失败</td><td>body code、message、data</td><td>网关/业务层把错误包装在 JSON 中</td></tr>
+          <tr><td>401/403 异常</td><td>是否走网关、tokenHead、Authorization</td><td>直连服务绕过鉴权或 Token 过期</td></tr>
+          <tr><td>setup error</td><td>fixture 堆栈、前置接口响应</td><td>账号登录失败、无商品、无地址</td></tr>
+          <tr><td>teardown error</td><td>yield 后清理代码</td><td>解析错资源 ID、资源状态不允许删除</td></tr>
+          <tr><td>只在 -n 2 失败</td><td>worker 是否共享商品/购物车/订单</td><td>并发串扰或清理了另一个 worker 的数据</td></tr>
+          <tr><td>ES 用例跳过</td><td>mall-search、9200、pms 索引</td><td>ES 未启动或索引未导入</td></tr>
+          <tr><td>DB OperationalError 1045</td><td>PYTEST_DB_USER/PASSWORD</td><td>MySQL 凭据错误或未配置</td></tr>
+        </tbody></table></div>
+        <h3>推荐排错命令</h3>
+        <div class="code-shell"><button class="copy-button" type="button">复制</button><pre><code># 保留实时日志，只跑一条
+python -m pytest tests/test_login.py::TestMemberLogin::test_member_login_success -s -vv
+
+# 首个失败后停止
+python -m pytest tests -x
+
+# 查看 fixture 解析
+python -m pytest --fixtures
+
+# 只收集，验证 marker/参数化
+python -m pytest tests --collect-only -q -o addopts=""
+
+# 生成独立失败报告
+python -m pytest -m order --html=reports/order-debug.html --self-contained-html</code></pre></div>
+        <details><summary>本次强化时真实遇到的 teardown 问题</summary><div><p>原 <code>confirm_order</code> fixture 在 yield 后把确认单响应误当成正式订单响应，访问 <code>data["order"]["id"]</code>，导致 5 个用例主体通过但 teardown 报 KeyError。修复方式是让确认单 fixture 直接 return，把订单清理移动到真正创建订单的 <code>generated_order</code> fixture。这个案例很好地说明了 failed 与 error 的区别。</p></div></details>
+      </section>
+
+      <section id="interview" class="chapter searchable" data-chapter="interview" data-title="面试表达">
+        <div class="chapter-head"><div><div class="chapter-number">12</div><h2>面试怎么讲：从“用了什么”升级到“为什么这样设计”</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="interview">我已掌握</label></div>
+        <h3>60 秒项目介绍</h3>
+        <blockquote class="callout success">这是一个面向 mall-swarm 电商微服务的接口自动化测试框架。我用 Python、pytest 和 requests 统一通过网关访问真实 API，覆盖登录、商品、搜索、购物车和订单五个业务域，共 131 条业务用例、32 个路由。框架用业务域 fixture 管理前置和清理，用 YAML/Pydantic/JSONPath 编排跨接口场景，并提供 SQLAlchemy 数据库双重校验、HTML/Allure/JUnit 报告和 Jenkins/GitHub Actions CI。项目重点解决了真实测试数据隔离、非幂等请求重试风险和 xdist worker 串扰问题。</blockquote>
+        <h3>高频追问与回答框架</h3>
+        <details><summary>1. 为什么要封装 ApiClient，直接 requests 不行吗？</summary><div class="interview-answer"><strong>回答：</strong>直接调用可以完成单条测试，但会重复 base URL、Token、超时、日志和报告逻辑。统一客户端让测试只关心业务输入与断言，同时把重试边界和敏感信息处理放在一个位置。需要强调客户端不做业务断言，避免职责混乱。</div></details>
+        <details><summary>2. 为什么 POST 不重试？</summary><div class="interview-answer"><strong>回答：</strong>客户端超时不代表服务端没有成功。POST 下单可能已经落库，重试会重复创建。项目只对 GET/HEAD/OPTIONS 的连接异常重试，业务 4xx/5xx 不重试。</div></details>
+        <details><summary>3. Fixture 和普通函数有什么区别？</summary><div class="interview-answer"><strong>回答：</strong>fixture 由 pytest 依赖注入和调度，支持 scope、缓存、依赖图和 yield teardown；普通函数由代码主动调用，不具备生命周期管理。</div></details>
+        <details><summary>4. 如何保证并行执行不串数据？</summary><div class="interview-answer"><strong>回答：</strong>服务端会合并同商品同 SKU 的购物车条目，所以框架按 worker id 分配不同商品；购物车按 item id 精确删除；清空场景使用独立 Faker 会员；订单按状态选择清理策略。</div></details>
+        <details><summary>5. YAML 数据驱动有什么优缺点？</summary><div class="interview-answer"><strong>回答：</strong>优点是流程和数据可读、跨步骤提取可复用，新增同类场景不用改执行器；缺点是复杂控制流和自定义清理表达困难，因此复杂用例保留 Python。</div></details>
+        <details><summary>6. 为什么接口返回 200 还可能失败？</summary><div class="interview-answer"><strong>回答：</strong>本项目网关可能用 HTTP 200 包装 body code 401。必须同时校验 HTTP 层、CommonResult 协议层和业务数据层。</div></details>
+        <details><summary>7. SQLAlchemy 在测试框架里解决什么？</summary><div class="interview-answer"><strong>回答：</strong>提供统一 Engine、连接池和断线检查，支持 API 与数据库最终状态比对；同时限制只读 SQL，避免测试断言误写业务库。</div></details>
+        <details><summary>8. 你发现过什么真实问题？</summary><div class="interview-answer"><strong>回答：</strong>仓库沉淀了 12 项契约差异，例如非法购物车参数写入脏数据、商品非法 ID 触发 500、emoji 搜索触发异常、订单接口返回结构不一致。回答时挑 2 个讲“发现方式、风险、断言和清理”。</div></details>
+        <details><summary>9. 为什么 xdist 提升不明显？</summary><div class="interview-answer"><strong>回答：</strong>本地低延迟且只有 131 条，worker 启动和 fixture 重建抵消收益。实测 8.818s 到 8.695s，只有约 1.4%，所以不能夸大并行效果。</div></details>
+        <details><summary>10. 这个项目下一步怎么改进？</summary><div class="interview-answer"><strong>回答：</strong>补齐真实 DB 凭据和 Jenkins Linux 首跑，建立 Allure 历史与连续 20 次稳定性采样，为 12 项已知差异绑定缺陷编号，并逐步收紧服务修复后的兼容断言。</div></details>
+        <h3>简历数据边界</h3>
+        <div class="callout danger"><strong>不要写：</strong>1400+ 用例、180+ 参数组合、2 小时降到 15 分钟、稳定性 97%、效率提升 99.5%。当前仓库没有这些证据。可信的表达是 131 条业务用例、11 条框架自测、32 个路由、79.17% 框架覆盖率、两次回归 0 failed/0 errors。</div>
+      </section>
+
+      <section id="quiz" class="chapter searchable" data-chapter="quiz" data-title="自测题">
+        <div class="chapter-head"><div><div class="chapter-number">13</div><h2>知识自测：能答对才算真的掌握</h2></div><label class="complete-control"><input class="chapter-check" type="checkbox" data-key="quiz">我已掌握</label></div>
+        <form id="quiz-form">
+          <div class="quiz-question" data-answer="b"><fieldset><legend>1. 真实 mall API 测试位于哪个目录？</legend><label class="quiz-option"><input type="radio" name="q1" value="a"> framework_tests/</label><label class="quiz-option"><input type="radio" name="q1" value="b"> tests/</label><label class="quiz-option"><input type="radio" name="q1" value="c"> mock_server/</label></fieldset><div class="quiz-feedback">正确答案是 tests/。framework_tests/ 只验证框架自身。</div></div>
+          <div class="quiz-question" data-answer="c"><fieldset><legend>2. 为什么下单 POST 请求不自动重试？</legend><label class="quiz-option"><input type="radio" name="q2" value="a"> POST 速度更快</label><label class="quiz-option"><input type="radio" name="q2" value="b"> requests 不支持</label><label class="quiz-option"><input type="radio" name="q2" value="c"> 可能造成重复业务写入</label></fieldset><div class="quiz-feedback">客户端读取超时时，服务端可能已经建单成功，重试会重复写入。</div></div>
+          <div class="quiz-question" data-answer="a"><fieldset><legend>3. yield fixture 中，yield 后面的代码什么时候执行？</legend><label class="quiz-option"><input type="radio" name="q3" value="a"> 测试结束后的 teardown</label><label class="quiz-option"><input type="radio" name="q3" value="b"> 测试收集前</label><label class="quiz-option"><input type="radio" name="q3" value="c"> 永远不执行</label></fieldset><div class="quiz-feedback">yield 前是 setup，yield 后是 teardown，按 fixture 依赖逆序执行。</div></div>
+          <div class="quiz-question" data-answer="b"><fieldset><legend>4. 本项目并行隔离商品的主要原因是什么？</legend><label class="quiz-option"><input type="radio" name="q4" value="a"> 每个商品价格不同</label><label class="quiz-option"><input type="radio" name="q4" value="b"> 同商品同 SKU 的购物车条目会被合并</label><label class="quiz-option"><input type="radio" name="q4" value="c"> ES 不支持并发</label></fieldset><div class="quiz-feedback">若 worker 共用同款商品，会发生数量累加和互相删除。</div></div>
+          <div class="quiz-question" data-answer="c"><fieldset><legend>5. JSONPath 在场景引擎中的主要作用是什么？</legend><label class="quiz-option"><input type="radio" name="q5" value="a"> 连接数据库</label><label class="quiz-option"><input type="radio" name="q5" value="b"> 生成报告</label><label class="quiz-option"><input type="radio" name="q5" value="c"> 从响应提取字段供后续步骤使用</label></fieldset><div class="quiz-feedback">例如从登录响应提取 token，再自动设置到后续请求。</div></div>
+          <div class="quiz-question" data-answer="a"><fieldset><legend>6. 79.17% 覆盖率表示什么？</legend><label class="quiz-option"><input type="radio" name="q6" value="a"> 框架核心 Python 代码覆盖率</label><label class="quiz-option"><input type="radio" name="q6" value="b"> mall 后端覆盖率</label><label class="quiz-option"><input type="radio" name="q6" value="c"> API 路由覆盖率</label></fieldset><div class="quiz-feedback">统计 config、engine、utils、mock_server，不是被测 Java 后端覆盖率。</div></div>
+          <div class="quiz-question" data-answer="b"><fieldset><legend>7. HTTP 200 + body code 401 应如何判断？</legend><label class="quiz-option"><input type="radio" name="q7" value="a"> 一定成功</label><label class="quiz-option"><input type="radio" name="q7" value="b"> 业务上是未登录失败</label><label class="quiz-option"><input type="radio" name="q7" value="c"> 无法测试</label></fieldset><div class="quiz-feedback">要同时检查 HTTP、协议结构和业务 code，不能只看 HTTP 200。</div></div>
+          <div class="quiz-question" data-answer="c"><fieldset><legend>8. 数据库断言为什么限制只读 SQL？</legend><label class="quiz-option"><input type="radio" name="q8" value="a"> 提升搜索速度</label><label class="quiz-option"><input type="radio" name="q8" value="b"> SQLAlchemy 只能查询</label><label class="quiz-option"><input type="radio" name="q8" value="c"> 防止断言配置误写业务库</label></fieldset><div class="quiz-feedback">数据库断言只负责观察最终状态，不应修改被测数据。</div></div>
+          <button class="quiz-submit" type="submit">提交答案</button><span id="quiz-score" class="quiz-score" aria-live="polite"></span>
+        </form>
+      </section>
+
+      <section id="glossary" class="chapter searchable" data-title="术语表与学习计划">
+        <div class="chapter-head"><div><div class="chapter-number">附录</div><h2>术语表与 7 天学习计划</h2></div></div>
+        <h3>术语表</h3>
+        <dl class="glossary-grid">
+          <div class="glossary-item"><dt>API</dt><dd>系统之间约定好的调用入口、参数和响应。</dd></div>
+          <div class="glossary-item"><dt>Fixture</dt><dd>pytest 管理的测试依赖、生命周期和清理单元。</dd></div>
+          <div class="glossary-item"><dt>Marker</dt><dd>用例标签，用于选择模块或测试维度。</dd></div>
+          <div class="glossary-item"><dt>Parametrize</dt><dd>用多组数据展开同一个测试逻辑。</dd></div>
+          <div class="glossary-item"><dt>幂等</dt><dd>同一操作重复执行，业务最终效果与执行一次相同。</dd></div>
+          <div class="glossary-item"><dt>JSONPath</dt><dd>从嵌套 JSON 中定位和提取字段的表达式。</dd></div>
+          <div class="glossary-item"><dt>Teardown</dt><dd>测试执行后的资源释放和数据清理阶段。</dd></div>
+          <div class="glossary-item"><dt>xdist</dt><dd>pytest 多进程分发与并行执行插件。</dd></div>
+          <div class="glossary-item"><dt>Allure</dt><dd>支持步骤、附件和历史展示的测试报告体系。</dd></div>
+          <div class="glossary-item"><dt>JUnit XML</dt><dd>CI 系统读取测试状态和耗时的标准结果格式。</dd></div>
+          <div class="glossary-item"><dt>连接池</dt><dd>复用数据库或 HTTP 连接，减少重复建立连接成本。</dd></div>
+          <div class="glossary-item"><dt>契约差异</dt><dd>测试规则、接口文档与真实响应行为不一致。</dd></div>
+        </dl>
+        <h3>7 天学习计划</h3>
+        <div class="table-wrap"><table><thead><tr><th>天数</th><th>任务</th><th>完成标准</th></tr></thead><tbody>
+          <tr><td>Day 1</td><td>运行 smoke、全量、指定模块，阅读 HTML 报告</td><td>能解释 passed/failed/error/skipped</td></tr>
+          <tr><td>Day 2</td><td>阅读 pytest.ini、conftest、登录测试和 session fixture</td><td>能画出登录请求链路</td></tr>
+          <tr><td>Day 3</td><td>阅读购物车 fixture 和测试</td><td>能解释 yield teardown 与精确清理</td></tr>
+          <tr><td>Day 4</td><td>阅读订单 fixture 和订单状态断言</td><td>能解释已支付订单为何不能删除</td></tr>
+          <tr><td>Day 5</td><td>运行 YAML 登录，阅读 engine 六个文件</td><td>能从 YAML 追踪到 HTTP 请求</td></tr>
+          <tr><td>Day 6</td><td>阅读 DB、Allure、Jenkinsfile 和 Actions</td><td>能解释本地、报告、CI 三层</td></tr>
+          <tr><td>Day 7</td><td>完成自测题，口述 60 秒介绍和 10 个追问</td><td>不看文档也能讲清设计取舍</td></tr>
+        </tbody></table></div>
+        <footer>
+          <p>数据基线：2026-08-18。完整统计与复现命令见根目录 <code>TECHNICAL_REPORT.md</code>。学习时以代码和实际运行结果为准，不背诵无法验证的指标。</p>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const storageKey = "pytest-framework-learning-progress-v1";
+      const root = document.documentElement;
+      const checks = Array.from(document.querySelectorAll(".chapter-check"));
+      const progressText = document.getElementById("progress-text");
+      const progressFill = document.getElementById("progress-fill");
+      const progressTrack = document.querySelector(".progress-track");
+
+      function loadProgress() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (_) { saved = {}; }
+        checks.forEach(check => { check.checked = Boolean(saved[check.dataset.key]); });
+        updateProgress();
+      }
+
+      function updateProgress() {
+        const completed = checks.filter(check => check.checked).length;
+        const total = checks.length;
+        progressText.textContent = `${completed} / ${total}`;
+        progressFill.style.width = `${total ? completed / total * 100 : 0}%`;
+        progressTrack.setAttribute("aria-valuenow", String(completed));
+        const state = Object.fromEntries(checks.map(check => [check.dataset.key, check.checked]));
+        try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) { /* 页面仍可正常学习 */ }
+      }
+
+      checks.forEach(check => check.addEventListener("change", updateProgress));
+      document.getElementById("reset-progress").addEventListener("click", () => {
+        checks.forEach(check => { check.checked = false; });
+        updateProgress();
+      });
+      loadProgress();
+
+      const savedTheme = localStorage.getItem("pytest-framework-guide-theme");
+      if (savedTheme === "dark") root.dataset.theme = "dark";
+      const themeButton = document.getElementById("theme-toggle");
+      function updateThemeLabel() { themeButton.textContent = root.dataset.theme === "dark" ? "浅色" : "深色"; }
+      updateThemeLabel();
+      themeButton.addEventListener("click", () => {
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        try { localStorage.setItem("pytest-framework-guide-theme", root.dataset.theme); } catch (_) { /* 忽略存储限制 */ }
+        updateThemeLabel();
+      });
+      document.getElementById("print-guide").addEventListener("click", () => window.print());
+
+      const pipelineDetails = [
+        ["pytest 收集", "根据 testpaths、文件名、类名和 test_ 函数发现用例；parametrize 在此阶段展开，marker 决定哪些 node 被选中。"],
+        ["fixture 依赖解析", "pytest 按测试函数参数名构建依赖图，创建 settings、客户端、商品、购物车等对象，并按 scope 缓存。"],
+        ["请求数据构造", "settings 负责服务路由，data 提供参数组合，fixture 提供动态 ID；YAML 场景还会先经过模板渲染。"],
+        ["真实网关请求", "ApiClient 复用 requests.Session，将路径拼接到 localhost:8201，并自动携带 Token、超时、日志与报告附件。"],
+        ["分层断言", "先判断 HTTP 与 JSON 协议，再判断业务 code、结构、状态变化；必要时用 JSONPath 提取或用 SQLAlchemy 比较数据库。"],
+        ["逆序清理与输出", "yield fixture 按依赖逆序 teardown；pytest-html、Allure、JUnit 分别生成人看、诊断和 CI 使用的结果。"]
+      ];
+      const pipelineDetail = document.getElementById("pipeline-detail");
+      function selectPipeline(index) {
+        document.querySelectorAll(".pipeline-node").forEach((button, i) => button.setAttribute("aria-pressed", String(i === index)));
+        pipelineDetail.innerHTML = `<h3>${pipelineDetails[index][0]}</h3><p>${pipelineDetails[index][1]}</p>`;
+      }
+      document.querySelectorAll(".pipeline-node").forEach(button => button.addEventListener("click", () => selectPipeline(Number(button.dataset.step))));
+      selectPipeline(0);
+
+      document.querySelectorAll("[data-tabs]").forEach(tabs => {
+        const buttons = Array.from(tabs.querySelectorAll(".tab-button"));
+        const panels = Array.from(tabs.querySelectorAll(".tab-panel"));
+        buttons.forEach(button => button.addEventListener("click", () => {
+          buttons.forEach(item => item.setAttribute("aria-selected", String(item === button)));
+          panels.forEach(panel => { panel.hidden = panel.dataset.panel !== button.dataset.tab; });
+        }));
+      });
+
+      document.querySelectorAll(".copy-button").forEach(button => {
+        button.addEventListener("click", async () => {
+          const text = button.parentElement.querySelector("pre").innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+            button.textContent = "已复制";
+          } catch (_) {
+            const area = document.createElement("textarea");
+            area.value = text;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+            const copied = document.execCommand("copy");
+            area.remove();
+            button.textContent = copied ? "已复制" : "复制失败";
+          }
+          window.setTimeout(() => { button.textContent = "复制"; }, 1400);
+        });
+      });
+
+      const quiz = document.getElementById("quiz-form");
+      quiz.addEventListener("submit", event => {
+        event.preventDefault();
+        const questions = Array.from(quiz.querySelectorAll(".quiz-question"));
+        let score = 0;
+        questions.forEach((question, index) => {
+          const selected = quiz.querySelector(`input[name="q${index + 1}"]:checked`);
+          const correct = selected && selected.value === question.dataset.answer;
+          question.classList.toggle("correct", Boolean(correct));
+          question.classList.toggle("incorrect", !correct);
+          if (correct) score += 1;
+        });
+        const scoreNode = document.getElementById("quiz-score");
+        scoreNode.textContent = `得分：${score} / ${questions.length}`;
+        if (score === questions.length) {
+          const check = document.querySelector('.chapter-check[data-key="quiz"]');
+          check.checked = true;
+          updateProgress();
+        }
+      });
+
+      const navLinks = Array.from(document.querySelectorAll(".nav-link"));
+      const observed = Array.from(document.querySelectorAll(".intro[id], .chapter[id]"));
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        navLinks.forEach(link => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+      }, { rootMargin: "-20% 0px -65% 0px", threshold: [0, 0.1, 0.5] });
+      observed.forEach(section => observer.observe(section));
+
+      const search = document.getElementById("global-search");
+      const searchSummary = document.getElementById("search-summary");
+      const searchable = Array.from(document.querySelectorAll(".searchable"));
+      search.addEventListener("input", () => {
+        const query = search.value.trim().toLowerCase();
+        let matches = 0;
+        searchable.forEach(section => {
+          const match = !query || section.textContent.toLowerCase().includes(query);
+          section.classList.toggle("hidden-by-search", !match);
+          if (query && match) matches += 1;
+        });
+        searchSummary.classList.toggle("visible", Boolean(query));
+        searchSummary.textContent = query ? `“${search.value.trim()}” 匹配 ${matches} 个章节。清空搜索恢复全部内容。` : "";
+      });
+    })();
+  </script>
+</body>
+</html>

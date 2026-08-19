@@ -1,0 +1,43 @@
+name: Bug report
+description: 报告可复现的框架或测试问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: dropdown
+    id: suite
+    attributes:
+      label: 问题范围
+      options:
+        - framework_tests 离线框架自测
+        - tests 真实 mall API
+        - YAML 场景执行器
+        - GitHub Actions / Jenkins
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: 执行命令与 marker
+      placeholder: python -m pytest tests -m login
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为和错误摘要
+      description: 请移除密码、token、手机号和数据库凭据。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      placeholder: Windows 11 / Python 3.12 / mall-swarm commit SHA
+    validations:
+      required: true

@@ -1,0 +1,46 @@
+# ============================================================================
+# mall-swarm 自动化测试全局配置
+# 说明:
+#   - 测试请求统一走网关(StripPrefix=1): {base_url}/mall-{service}/xxx
+#   - 支持环境变量覆盖(优先级高于本文件),见 config/settings.py 头部注释
+#   - 账号密码与本地 mall 库初始化数据一致(member: test/123456, admin: admin/macro123)
+# ============================================================================
+env: local
+
+gateway:
+  base_url: http://localhost:8201
+  timeout: 15          # 单次请求超时(秒)
+  retry: 1             # 连接失败/超时重试次数(HTTP 4xx/5xx 不重试)
+
+services:              # 网关路由前缀(对应 mall-gateway 的 StripPrefix=1 配置)
+  auth: mall-auth
+  admin: mall-admin
+  portal: mall-portal
+  search: mall-search
+
+accounts:
+  member:              # 前台会员(mall.sql 内置 test 用户)
+    username: test
+    password: "123456"
+  admin:               # 后台管理员(ums_admin 内置账号)
+    username: admin
+    password: macro123
+
+pagination:
+  default_page_size: 5
+
+es:
+  keyword: 小米         # 搜索用例默认关键字(pms 数据中存在该品牌商品)
+  min_expected_hits: 1  # ES/MySQL 搜索断言:至少返回 1 条才视为索引有数据
+
+# 数据库断言默认关闭。CI 中通过 PYTEST_DB_* 环境变量启用,不要提交真实密码。
+database:
+  enabled: false
+  host: localhost
+  port: 3306
+  user: root
+  password: ""
+  database: mall
+  charset: utf8mb4
+  connect_timeout: 5
+  pool_recycle: 1800

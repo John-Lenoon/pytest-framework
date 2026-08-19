@@ -1,0 +1,18 @@
+# mall-swarm pytest 自动化测试框架依赖
+# 安装: pip install -r requirements.txt
+# 说明: tests/ 直连真实 mall API;framework_tests/ 使用 Flask 服务验证框架本身。
+#       只有执行 tests/ 前需要启动 mall-swarm 服务与中间件(见 README.md)。
+
+pytest>=8.0,<9.0
+requests>=2.31,<3.0
+Faker>=24.0,<40.0
+PyYAML>=6.0,<7.0
+pydantic>=2.6,<3.0
+allure-pytest>=2.13,<3.0
+pytest-xdist>=3.5,<4.0
+pytest-cov>=4.1,<8.0
+pytest-html>=4.1,<5.0
+Flask>=3.0,<4.0
+SQLAlchemy>=2.0,<3.0
+PyMySQL>=1.1,<2.0
+jsonpath-ng>=1.6,<2.0

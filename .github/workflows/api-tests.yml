@@ -1,0 +1,104 @@
+name: API tests
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      marker:
+        description: Pytest marker for real mall E2E tests
+        required: false
+        default: smoke
+
+jobs:
+  framework-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+      DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Run framework tests
+        run: >-
+          pytest framework_tests -m framework
+          --alluredir=allure-results --junitxml=junit-framework.xml
+          --html=reports/framework.html --self-contained-html
+      - name: Install Allure CLI
+        if: always()
+        run: npm install --global allure-commandline
+      - name: Generate Allure report
+        if: always()
+        run: allure generate allure-results --clean -o allure-report
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-test-reports
+          path: |
+            allure-report
+            allure-results
+            reports/framework.html
+            junit-framework.xml
+      - name: Notify DingTalk
+        if: ${{ always() && env.DINGTALK_WEBHOOK != '' }}
+        run: >-
+          python scripts/notify_dingtalk.py
+          --status "${{ job.status }}"
+          --suite "Framework tests"
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  mall-e2e:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTEST_BASE_URL: ${{ secrets.PYTEST_BASE_URL }}
+      PYTEST_MEMBER_USERNAME: ${{ secrets.PYTEST_MEMBER_USERNAME }}
+      PYTEST_MEMBER_PASSWORD: ${{ secrets.PYTEST_MEMBER_PASSWORD }}
+      PYTEST_ADMIN_USERNAME: ${{ secrets.PYTEST_ADMIN_USERNAME }}
+      PYTEST_ADMIN_PASSWORD: ${{ secrets.PYTEST_ADMIN_PASSWORD }}
+      PYTEST_DB_ENABLED: ${{ vars.PYTEST_DB_ENABLED }}
+      PYTEST_DB_HOST: ${{ secrets.PYTEST_DB_HOST }}
+      PYTEST_DB_PORT: ${{ secrets.PYTEST_DB_PORT }}
+      PYTEST_DB_USER: ${{ secrets.PYTEST_DB_USER }}
+      PYTEST_DB_PASSWORD: ${{ secrets.PYTEST_DB_PASSWORD }}
+      PYTEST_DB_NAME: ${{ secrets.PYTEST_DB_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - name: Run mall E2E tests
+        run: >-
+          pytest tests -m "${{ inputs.marker }}"
+          -n auto --alluredir=allure-results --junitxml=junit-e2e.xml
+          --html=reports/e2e.html --self-contained-html
+      - name: Upload raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mall-e2e-results
+          path: |
+            allure-results
+            reports/e2e.html
+            junit-e2e.xml

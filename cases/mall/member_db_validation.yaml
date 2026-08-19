@@ -1,0 +1,30 @@
+cases:
+  - name: 会员信息接口与MySQL双重校验
+    description: 登录后比较接口 username 与 ums_member 表记录
+    tags: [login, database]
+    steps:
+      - name: 登录并自动设置 token
+        request:
+          method: POST
+          path: /mall-portal/sso/login
+          params:
+            username: ${member_username}
+            password: ${member_password}
+        extract:
+          token: $.data.token
+          tokenHead: $.data.tokenHead
+        assertions:
+          - {actual: $.code, comparator: eq, expected: 200}
+
+      - name: 查询会员信息并校验数据库
+        request:
+          method: GET
+          path: /mall-portal/sso/info
+        extract:
+          member_id: $.data.id
+        assertions:
+          - {actual: $.data.username, comparator: eq, expected: "${member_username}"}
+          - actual: $.data.username
+            comparator: db_eq
+            sql: SELECT username FROM ums_member WHERE id=%s
+            params: ["${member_id}"]
