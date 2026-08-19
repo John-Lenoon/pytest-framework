@@ -27,7 +27,7 @@ jobs:
       DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -82,7 +82,7 @@ jobs:
       PYTEST_DB_NAME: ${{ secrets.PYTEST_DB_NAME }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
